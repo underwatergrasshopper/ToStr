@@ -25,5 +25,6 @@
     <None Include="RunTestsGCC.bat">
       <Filter>scripts</Filter>
     </None>
+    <None Include=".gitignore" />
   </ItemGroup>
 </Project>
