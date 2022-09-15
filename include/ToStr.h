@@ -48,7 +48,7 @@ inline std::string ToStr(const char* format, Types&&... args) {
 
 template <typename... Types>
 inline std::string ToStr(const std::string& format, Types&&... args) {
-    return ToStr(format.c_str(), std::forward(args)...);
+    return ToStr(format.c_str(), std::forward<Types>(args)...);
 }
 
 #endif // TOSTR_H_
