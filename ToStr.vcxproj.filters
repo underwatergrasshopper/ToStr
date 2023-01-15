@@ -19,4 +19,13 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="MinGW_MakeTest.bat" />
+    <None Include="MinGW_Test.bat" />
+    <None Include="Pack.bat" />
+    <None Include="Test.bat" />
+    <None Include="CHANGELOG.md" />
+    <None Include="README.md" />
+  </ItemGroup>
 </Project>

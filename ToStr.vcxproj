@@ -21,6 +21,15 @@
   <ItemGroup>
     <ClInclude Include="include\ToStr.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="CHANGELOG.md" />
+    <None Include="MinGW_MakeTest.bat" />
+    <None Include="MinGW_Test.bat" />
+    <None Include="Pack.bat" />
+    <None Include="README.md" />
+    <None Include="Test.bat" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

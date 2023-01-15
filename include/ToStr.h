@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // MIT License
 // 
-// Copyright (c) 2022 underwatergrasshopper
+// Copyright (c) 2023 underwatergrasshopper
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 /**
 * @file ToStr.h
 * @author underwatergrasshopper
+* @version 0.1.0
 */
 
 #ifndef TOSTR_H_
