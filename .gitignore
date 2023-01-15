@@ -349,6 +349,8 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-# Tests
-Test/
-TestDebug/
+# Custom
+build/
+dist/
+MinGW_MakeCache.bat
+TestCache.bat

@@ -23,16 +23,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
-#include "ToStr.h"
 
-#if defined(TOSTR_TEST)
+#include "ToStr.h"
 
 int main() {
     puts(ToStr("", "").c_str());
     return 0;
 }
-
-#else
-#error "Select 'Test' or 'TestDebug' in 'Solution Configuration'"
-
-#endif
