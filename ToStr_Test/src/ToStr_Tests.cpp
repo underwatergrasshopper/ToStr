@@ -26,5 +26,6 @@ void TestBasic() {
 
 int ToStr_RunTests() {
     TTK_ADD_TEST(TestBasic, 0);
-    return TTK_Run();
+
+    return !TTK_Run();
 }
