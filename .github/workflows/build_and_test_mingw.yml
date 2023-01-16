@@ -31,6 +31,8 @@ jobs:
     steps:
       - name: Install Checkout
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
         
       - name: Install MSYS
         uses: msys2/setup-msys2@v2
