@@ -1,0 +1,58 @@
+name: Build and Test (MinGW CLang LLVM)
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+env:
+  SOLUTION_FILE_PATH: .
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_test:
+    runs-on: windows-2022
+
+    strategy:
+      matrix:
+        build_mode: [Release, Debug]
+        platform: [32, 64]
+        test_flag: [""]
+        include:
+          - platform: 32
+            mingw_folder: llvm-mingw-20220906-ucrt-i686
+            platform_folder: Win32
+          - platform: 64
+            mingw_folder: llvm-mingw-20220906-ucrt-x86_64
+            platform_folder: x64
+    steps:
+      - name: Install Checkout
+        uses: actions/checkout@v3
+        
+      - name: Install MSYS
+        uses: msys2/setup-msys2@v2
+      
+      - name: Download MinGW
+        shell: msys2 {0}
+        run: wget https://github.com/mstorsjo/llvm-mingw/releases/download/20220906/${{ matrix.mingw_folder }}.zip -P C:/ 
+          
+      - name: Extract MinGW
+        working-directory: C:\
+        run: 7z x ${{ matrix.mingw_folder }}.zip
+ 
+      - name: Build
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: |
+          $env:Path = "C:\${{ matrix.mingw_folder }}\bin;" + $env:Path 
+          ./MinGW_MakeTest.bat build ${{ matrix.build_mode }} ${{ matrix.platform }}
+        
+      - name: Test
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: |
+          $env:Path = "C:\${{ matrix.mingw_folder }}\bin;" + $env:Path 
+          cd build\mingw_llvm\${{ matrix.platform_folder }}\${{ matrix.build_mode }}
+          ./ToStr_Test.exe ${{ matrix.test_flag }}
+      
