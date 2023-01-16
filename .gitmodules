@@ -1,0 +1,3 @@
+[submodule "ToStr_Test/externals/TrivialTestKit"]
+	path = ToStr_Test/externals/TrivialTestKit
+	url = https://github.com/underwatergrasshopper/TrivialTestKit.git
