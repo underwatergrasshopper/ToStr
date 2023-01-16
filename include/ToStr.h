@@ -44,7 +44,7 @@ std::string ToStr(const char* format, Types&&... arguments);
 template <typename... Types>
 std::string ToStr(const std::string& format, Types&&... arguments);
 
-void ToStr_SetHandleFatalErrorMessageFunction(void (*handle_fatal_error_message)(const char* message));
+void ToStr_SetHandleFatalErrorMessageFunction(void (*handle_fatal_error_message)(const char* message)); // not multi-thread safe
 void ToStr_DefaultHandleFatalErrorMessage(const char* message);
 
 //------------------------------------------------------------------------------
@@ -64,8 +64,7 @@ inline ToStr_Data& ToStr_ToData() {
 }
 
 template <typename... Types>
-inline std::string ToStr(const char* format, Types&&... arguments) {
-
+std::string ToStr(const char* format, Types&&... arguments) {
     auto FatalError = [](const char* message) {
         ToStr_Data& data = ToStr_ToData();
         if (data.handle_fatal_error_message) data.handle_fatal_error_message(message);
@@ -77,39 +76,44 @@ inline std::string ToStr(const char* format, Types&&... arguments) {
     enum { SIZE = 4096 };
     char buffer[SIZE];
 
+    if (format == nullptr) {
+        FatalError("ToStr Error: Argument 'format' can not be 0 or '\\0'.");
+    } 
+
     const int length = snprintf(buffer, SIZE, format, arguments...);
 
     if (errno != 0) {
-        if (errno == EINVAL) FatalError("ToStr Error: Wrong argument.");
+        if (errno == EINVAL)FatalError("ToStr Error: Wrong argument.");
         FatalError("ToStr Error: Writing to buffer failed.");
     } 
+
     if (length < 0) {
         FatalError("ToStr Error: Encoding error.");
-    }
+    } 
+
     if (length >= SIZE) {
         const size_t    ext_size    = length + 1;
         char*           ext_buffer  = new char[ext_size];
 
-        const int same_length = snprintf(ext_buffer, ext_size, format, arguments...);
+        const int expected_same_length = snprintf(ext_buffer, ext_size, format, arguments...);
 
         if (errno != 0) {
             if (errno == EINVAL) FatalError("ToStr Error: Wrong argument at second writing to buffer.");
-            FatalError("ToStr Error: Second writing to buffer failed.");
-        }
-        if (same_length < 0) {
+            FatalError("ToStr Error: Writing to buffer failed at second writing to buffer.");
+        } 
+        if (expected_same_length < 0) {
             FatalError("ToStr Error: Encoding error at second writing to buffer.");
-        }
-        if (same_length != length) {
+        } 
+        if (expected_same_length != length) {
             FatalError("ToStr Error: Message actual length miss-match between first and second write to buffer.");
         }
 
-        text = std::string(ext_buffer, same_length);
+        text = std::string(ext_buffer, expected_same_length);
 
         delete[] ext_buffer;
     } else {
         text = std::string(buffer, length);
     }
-
     return text;
 }
 
