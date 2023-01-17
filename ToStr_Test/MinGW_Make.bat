@@ -1,4 +1,19 @@
 :: Builds project by using MinGW GCC Compiler and/or runs built application.
+
+:: MinGW_Make <action> <mode> <architecture>
+::      <action>
+::          build
+::          run
+::          just_run
+::      <mode>
+::          Debug
+::          Release
+::      <architecture>
+::          32
+::          64
+::      <test_flags>
+::          <word>( <word>)*
+
 @echo off
 setlocal EnableDelayedExpansion
 
@@ -76,6 +91,9 @@ if "!IS_OK!" equ "True" (
     ) else if "!ACTION!" equ "run" (
         call :BUILD
         if !ERRORLEVEL! neq 0 exit /B !ERRORLEVEL!
+        call :RUN
+        if !ERRORLEVEL! neq 0 exit /B !ERRORLEVEL!
+    ) else if "!ACTION!" equ "just_run" (
         call :RUN
         if !ERRORLEVEL! neq 0 exit /B !ERRORLEVEL!
     ) else (
