@@ -31,12 +31,16 @@
 #ifndef TOSTR_H_
 #define TOSTR_H_
 
+#include <locale.h>
+
 #include <string>
 #include <utility>
 
 //------------------------------------------------------------------------------
 // Declarations
 //------------------------------------------------------------------------------
+
+enum { TOSTR_DEF_BUFFER_SIZE = 4096 };
 
 template <typename... Types>
 std::string ToStr(const char* format, Types&&... arguments);
@@ -73,14 +77,13 @@ std::string ToStr(const char* format, Types&&... arguments) {
 
     std::string text;
 
-    enum { SIZE = 4096 };
-    char buffer[SIZE];
+    char buffer[TOSTR_DEF_BUFFER_SIZE];
 
     if (format == nullptr) {
         FatalError("ToStr Error: Argument 'format' can not be 0 or '\\0'.");
     } 
 
-    const int length = snprintf(buffer, SIZE, format, arguments...);
+    const int length = snprintf(buffer, TOSTR_DEF_BUFFER_SIZE, format, arguments...);
 
     if (errno != 0) {
         if (errno == EINVAL)FatalError("ToStr Error: Wrong argument.");
@@ -91,7 +94,7 @@ std::string ToStr(const char* format, Types&&... arguments) {
         FatalError("ToStr Error: Encoding error.");
     } 
 
-    if (length >= SIZE) {
+    if (length >= TOSTR_DEF_BUFFER_SIZE) {
         const size_t    ext_size    = length + 1;
         char*           ext_buffer  = new char[ext_size];
 
@@ -114,6 +117,7 @@ std::string ToStr(const char* format, Types&&... arguments) {
     } else {
         text = std::string(buffer, length);
     }
+
     return text;
 }
 

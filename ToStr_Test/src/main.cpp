@@ -1,5 +1,5 @@
 #include "ToStr_Tests.h"
 
-int main() {
-    return ToStr_RunTests();
+int main(int argc, char *argv[]) {
+    return ToStr_RunTests(argc, argv);
 }
