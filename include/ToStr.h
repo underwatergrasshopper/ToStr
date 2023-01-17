@@ -40,15 +40,23 @@
 // Declarations
 //------------------------------------------------------------------------------
 
-enum { TOSTR_DEF_BUFFER_SIZE = 4096 };
+// If ToStr function exceeds size of TOSTR_STATIC_BUFFER_SIZE, then dynamically allocates new one with needed size.
+// In other words, generated messages can be longer than this size.
+enum { TOSTR_STATIC_BUFFER_SIZE = 4096 };
 
+// Converts arguments to text according to the format.
+// format           Same rules as for 'printf' function.
+// arguments        Same rules as for 'printf' function.
 template <typename... Types>
 std::string ToStr(const char* format, Types&&... arguments);
 
 template <typename... Types>
 std::string ToStr(const std::string& format, Types&&... arguments);
 
+// Replaces default function for handling error messages to custom, used by ToStr function. 
+// After handling error message, ToStr function aborts execution of calling program.
 void ToStr_SetHandleFatalErrorMessageFunction(void (*handle_fatal_error_message)(const char* message)); // not multi-thread safe
+
 void ToStr_DefaultHandleFatalErrorMessage(const char* message);
 
 //------------------------------------------------------------------------------
@@ -77,13 +85,13 @@ std::string ToStr(const char* format, Types&&... arguments) {
 
     std::string text;
 
-    char buffer[TOSTR_DEF_BUFFER_SIZE];
+    char buffer[TOSTR_STATIC_BUFFER_SIZE];
 
     if (format == nullptr) {
         FatalError("ToStr Error: Argument 'format' can not be 0 or '\\0'.");
     } 
 
-    const int length = snprintf(buffer, TOSTR_DEF_BUFFER_SIZE, format, arguments...);
+    const int length = snprintf(buffer, TOSTR_STATIC_BUFFER_SIZE, format, arguments...);
 
     if (errno != 0) {
         if (errno == EINVAL)FatalError("ToStr Error: Wrong argument.");
@@ -94,7 +102,7 @@ std::string ToStr(const char* format, Types&&... arguments) {
         FatalError("ToStr Error: Encoding error.");
     } 
 
-    if (length >= TOSTR_DEF_BUFFER_SIZE) {
+    if (length >= TOSTR_STATIC_BUFFER_SIZE) {
         const size_t    ext_size    = length + 1;
         char*           ext_buffer  = new char[ext_size];
 

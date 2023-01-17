@@ -63,7 +63,7 @@ void TestToStr() {
 
         std::string long_text;
 
-        size_t number = TOSTR_DEF_BUFFER_SIZE * 2 / sequence.length();
+        size_t number = TOSTR_STATIC_BUFFER_SIZE * 2 / sequence.length();
 
         for (size_t ix = 0; ix < number; ++ix) long_text += sequence;
 
