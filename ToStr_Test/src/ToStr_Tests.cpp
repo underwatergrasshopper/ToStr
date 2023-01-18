@@ -23,6 +23,75 @@ std::string LoadContentFromFile(const std::string& file_name) {
     return content;
 }
 
+void TestToUTF16() {
+    // empty text
+    TTK_ASSERT(ToUTF16(u8"") == L"");
+
+    // unicode characters
+    TTK_ASSERT(ToUTF16(u8"Some text\u0444\U0002F820.") == L"Some text\u0444\U0002F820.");
+
+    // long text
+    {
+        const std::string sequence_utf8 =  
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. ";
+
+        const std::wstring sequence_utf16 =  
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. ";
+
+        std::string long_text_utf8;
+        std::wstring long_text_utf16;
+
+        const size_t number = TOSTR_MIN_BUFFER_SIZE * 2 / sequence_utf16.length();
+        for (size_t ix = 0; ix < number; ++ix) {
+            long_text_utf8  += sequence_utf8;
+            long_text_utf16 += sequence_utf16;
+        }
+
+        TTK_ASSERT(ToUTF16(long_text_utf8) == long_text_utf16);
+    }
+}
+
+void TestToUTF8() {
+    // empty text
+    TTK_ASSERT(ToUTF8(L"") == u8"");
+
+    // unicode characters
+    TTK_ASSERT(ToUTF8(L"Some text\u0444\U0002F820.") == u8"Some text\u0444\U0002F820.");
+
+    // long text
+    {
+        const std::string sequence_utf8 =  
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. ";
+
+        const std::wstring sequence_utf16 =  
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. ";
+
+        std::string long_text_utf8;
+        std::wstring long_text_utf16;
+
+        const size_t number = TOSTR_MIN_BUFFER_SIZE * 2 / sequence_utf8.length();
+        for (size_t ix = 0; ix < number; ++ix) {
+            long_text_utf8  += sequence_utf8;
+            long_text_utf16 += sequence_utf16;
+        }
+
+        TTK_ASSERT(ToUTF8(long_text_utf16) == long_text_utf8);
+    }
+}
+
+
 void TestToStr() {
     // empty string
 #ifdef __GNUC__
@@ -63,7 +132,7 @@ void TestToStr() {
 
         std::string long_text;
 
-        size_t number = TOSTR_STATIC_BUFFER_SIZE * 2 / sequence.length();
+        size_t number = TOSTR_MIN_BUFFER_SIZE * 2 / sequence.length();
 
         for (size_t ix = 0; ix < number; ++ix) long_text += sequence;
 
@@ -114,6 +183,8 @@ int ToStr_RunTests(int argc, char *argv[]) {
         return false;
 
     } else {
+        TTK_ADD_TEST(TestToUTF8, 0);
+        TTK_ADD_TEST(TestToUTF16, 0);
         TTK_ADD_TEST(TestToStr, 0);
         TTK_ADD_TEST(TestToStrFATAL_ERRROR, 0);
 
