@@ -32,6 +32,7 @@
 #define TOSTR_H_
 
 #include <locale.h>
+#include <wchar.h>
 
 #include <string>
 #include <utility>
@@ -44,7 +45,7 @@
 // In other words, generated messages can be longer than this size.
 enum { TOSTR_STATIC_BUFFER_SIZE = 4096 };
 
-// Converts arguments to text according to the format.
+// Converts arguments to text according to the format. Encoding of strings: ASCII, UTF8.
 // format           Same rules as for 'printf' function.
 // arguments        Same rules as for 'printf' function.
 template <typename... Types>
@@ -74,6 +75,8 @@ inline ToStr_Data& ToStr_ToData() {
 
     return s_data;
 }
+
+//------------------------------------------------------------------------------
 
 template <typename... Types>
 std::string ToStr(const char* format, Types&&... arguments) {
@@ -139,7 +142,11 @@ inline void ToStr_SetHandleFatalErrorMessageFunction(void (*handle_fatal_error_m
 }
 
 inline void ToStr_DefaultHandleFatalErrorMessage(const char* message) {
-    puts(message);
+    if (fwide(stdout, 0) > 0) {
+        wprintf(L"%hs\n", message);
+    } else {
+        puts(message);
+    }
     fflush(stdout);
 }
 
