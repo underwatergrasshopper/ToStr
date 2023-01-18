@@ -50,9 +50,6 @@ std::wstring ToUTF16(const std::string& text_utf8);
 
 //------------------------------------------------------------------------------
 
-// If ToStr function exceeds size of TOSTR_MIN_BUFFER_SIZE, then dynamically allocates new one with needed size.
-// In other words, generated messages can be longer than this size.
-
 // This is the internal buffer size under which no dynamic allocation happens internally in this lib.
 enum { TOSTR_MIN_BUFFER_SIZE = 4096 };
 
@@ -70,6 +67,30 @@ std::string ToStr(const std::string& format, Types&&... arguments);
 void ToStr_SetHandleFatalErrorMessageFunction(void (*handle_fatal_error_message)(const char* message)); // not multi-thread safe
 
 void ToStr_DefaultHandleFatalErrorMessage(const char* message);
+
+//------------------------------------------------------------------------------
+
+// file_name            File name with full path to file. Encoding: ASCII.
+// is_loaded            (Optional) If entire file text has been loaded - is set to true, otherwise - is set to false.
+// Returns              Loaded text. Encoding: ASCII.
+std::string LoadTextFromFile(const std::string& file_name, bool* is_loaded = nullptr);
+
+// file_name            File name with full path to file. Encoding: UTF8.
+// is_loaded            (Optional) If entire file text has been loaded - is set to true, otherwise - is set to false.
+// Returns              Loaded text. Encoding: UTF8.
+std::string LoadTextFromFileUTF8(const std::string& file_name, bool* is_loaded = nullptr);
+
+// file_name            File name with full path to file. Encoding: ASCII.
+// text                 Text to be saved in file. Encoding: ASCII.
+// Returns              true    - if entire file text has been loaded,
+//                      false   - otherwise.
+bool SaveTextToFile(const std::string& file_name, const std::string& text);
+
+// file_name            File name with full path to file. Encoding: UTF8.
+// text                 Text to be saved in file. Encoding: UTF8.
+// Returns              true    - if entire file text has been loaded,
+//                      false   - otherwise.
+bool SaveTextToFileUTF8(const std::string& file_name, const std::string& text);
 
 //------------------------------------------------------------------------------
 // Inner (only to use internally by this lib)
@@ -227,6 +248,85 @@ inline void ToStr_DefaultHandleFatalErrorMessage(const char* message) {
         puts(message);
     }
     fflush(stdout);
+}
+
+//------------------------------------------------------------------------------
+
+class ToStr_LocaleGuardian {
+public:
+    ToStr_LocaleGuardian(int category, const char* locale) {
+        char* beckup = setlocale(LC_ALL, ".UTF8");
+        m_backup = beckup ? std::string(beckup) : "";
+    }
+    virtual ~ToStr_LocaleGuardian() {
+        if (!m_backup.empty()) setlocale(LC_ALL, m_backup.c_str());
+    }
+private:
+    std::string m_backup;
+};
+
+#define TOSTR_LOCALE_GUARDIAN_UTF8() ToStr_LocaleGuardian locale_guardian_utf8(LC_ALL, ".UTF8")
+
+inline std::string LoadTextFromFile(const std::string& file_name, bool* is_loaded) {
+    std::string text;
+
+    FILE* file = nullptr;
+    if (fopen_s(&file, file_name.c_str(), "rt") == 0 && file) {
+
+        char c;
+        while ((c = fgetc(file)) != EOF) text += c;
+        fclose(file);
+
+        if (is_loaded) *is_loaded = true;
+    } else {
+        if (is_loaded) *is_loaded = false;
+    }
+
+    return text;
+}
+
+inline bool SaveTextToFile(const std::string& file_name, const std::string& text) {
+    FILE* file = nullptr;
+    if (fopen_s(&file, file_name.c_str(), "wt") == 0 && file) {
+        const int count = fprintf(file, "%s", text.c_str());
+        fclose(file);
+
+        return count == text.length();
+    }
+
+    return false;
+}
+
+inline std::string LoadTextFromFileUTF8(const std::string& file_name, bool* is_loaded) {
+    std::wstring text;
+
+    FILE* file = nullptr;
+    if (_wfopen_s(&file, ToUTF16(file_name).c_str(), L"rt, ccs=UTF-8") == 0 && file) {
+
+        wchar_t c;
+        while ((c = fgetwc(file)) != WEOF) text += c;
+        fclose(file);
+
+        if (is_loaded) *is_loaded = true;
+    } else {
+        if (is_loaded) *is_loaded = false;
+    }
+
+    return ToUTF8(text);
+}
+
+inline bool SaveTextToFileUTF8(const std::string& file_name, const std::string& text) {
+    FILE* file = nullptr;
+    if (_wfopen_s(&file, ToUTF16(file_name).c_str(), L"wt, ccs=UTF-8") == 0 && file) {
+        const std::wstring text_utf16 = ToUTF16(text);
+
+        const int count = fwprintf(file, L"%ls", text_utf16.c_str());
+        fclose(file);
+
+        return count == text_utf16.length();
+    }
+   
+    return false;
 }
 
 #endif // TOSTR_H_

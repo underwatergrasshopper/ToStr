@@ -9,7 +9,7 @@
 
 #include <set>
 
-std::string LoadContentFromFile(const std::string& file_name) {
+std::string InnerLoadContentFromFile(const std::string& file_name) {
     std::string content;
 
     FILE* file = nullptr;
@@ -91,6 +91,38 @@ void TestToUTF8() {
     }
 }
 
+void TestLoadSave() {
+    TTK_ASSERT(CreateDirectoryA(".\\log", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
+    TTK_ASSERT(CreateDirectoryA(".\\log\\test", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
+
+    {
+        const std::string file_name = "log\\test\\file.txt";
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(SaveTextToFile(file_name, expected_content));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFile(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(expected_content == content);
+    }
+
+    {
+        const std::string file_name = u8"log\\test\\\u0107\u0119\u0144.txt";
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(SaveTextToFileUTF8(file_name, expected_content));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFileUTF8(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(expected_content == content);
+    }
+
+}
+
 
 void TestToStr() {
     // empty string
@@ -150,10 +182,10 @@ void TestToStrFATAL_ERRROR() {
     TTK_ASSERT(CreateDirectoryA(".\\log\\test", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
 
     system("ToStr_Test.exe ZERO_FORMAT > log\\test\\zero_format.txt");
-    TTK_ASSERT(LoadContentFromFile("log\\test\\zero_format.txt") == "ToStr Error: Argument 'format' can not be 0 or '\\0'.\n");
+    TTK_ASSERT(InnerLoadContentFromFile("log\\test\\zero_format.txt") == "ToStr Error: Argument 'format' can not be 0 or '\\0'.\n");
 
     system("ToStr_Test.exe CUSTOM_ERR_MSG_HANDLING > log\\test\\custom_err_msg_handling.txt");
-    TTK_ASSERT(LoadContentFromFile("log\\test\\custom_err_msg_handling.txt") == "ToStr Error: Argument 'format' can not be 0 or '\\0'.\naddition text\n");
+    TTK_ASSERT(InnerLoadContentFromFile("log\\test\\custom_err_msg_handling.txt") == "ToStr Error: Argument 'format' can not be 0 or '\\0'.\naddition text\n");
 }
 
 int ToStr_RunTests(int argc, char *argv[]) {
@@ -185,6 +217,7 @@ int ToStr_RunTests(int argc, char *argv[]) {
     } else {
         TTK_ADD_TEST(TestToUTF8, 0);
         TTK_ADD_TEST(TestToUTF16, 0);
+        TTK_ADD_TEST(TestLoadSave, 0);
         TTK_ADD_TEST(TestToStr, 0);
         TTK_ADD_TEST(TestToStrFATAL_ERRROR, 0);
 
