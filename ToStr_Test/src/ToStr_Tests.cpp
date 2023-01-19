@@ -5,9 +5,11 @@
 #include <stdio.h>
 #include <windows.h>
 
+#include <set>
+
 #include <TrivialTestKit.h>
 
-#include <set>
+//------------------------------------------------------------------------------
 
 std::string InnerLoadContentFromFile(const std::string& file_name) {
     std::string content;
@@ -22,6 +24,28 @@ std::string InnerLoadContentFromFile(const std::string& file_name) {
 
     return content;
 }
+
+bool CreateReadOnlyFile(const std::wstring& file_name) {
+    HANDLE file_handle = CreateFileW(
+        file_name.c_str(),
+        GENERIC_READ,
+        0,
+        NULL,
+        CREATE_NEW,
+        FILE_ATTRIBUTE_READONLY,
+        NULL
+    );
+
+    if (file_handle == INVALID_HANDLE_VALUE) {
+        if (GetLastError() == ERROR_FILE_EXISTS) return true;
+        return false;
+    } 
+
+    CloseHandle(file_handle);
+    return true;
+}
+
+//------------------------------------------------------------------------------
 
 void TestToUTF16() {
     // empty text
@@ -95,8 +119,9 @@ void TestLoadSave() {
     TTK_ASSERT(CreateDirectoryA(".\\log", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
     TTK_ASSERT(CreateDirectoryA(".\\log\\test", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
 
+    // ascii
     {
-        const std::string file_name = "log\\test\\file.txt";
+        const std::string file_name = "log\\test\\TestLoadSave.txt";
         const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
 
         TTK_ASSERT(SaveTextToFile(file_name, expected_content));
@@ -105,11 +130,74 @@ void TestLoadSave() {
         const std::string content = LoadTextFromFile(file_name, &is_loaded);
 
         TTK_ASSERT(is_loaded);
-        TTK_ASSERT(expected_content == content);
+        TTK_ASSERT(content == expected_content);
     }
 
+    // empty file, ascii
     {
-        const std::string file_name = u8"log\\test\\\u0107\u0119\u0144.txt";
+        const std::string file_name = "log\\test\\TestLoadSave_EmptyFile.txt";
+
+        TTK_ASSERT(SaveTextToFile(file_name, ""));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFile(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(content == "");
+    }
+
+    
+    // no is_loaded check, ascii
+    {
+        const std::string file_name = "log\\test\\TestLoadSave_NoIsLoadedCheck.txt";
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(SaveTextToFile(file_name, expected_content));
+
+        const std::string content = LoadTextFromFile(file_name);
+
+        TTK_ASSERT(content == expected_content);
+    }
+    
+    // load from not existing, ascii
+    {
+        const std::string file_name = "log\\test\\TestLoadSave_NotExisting.txt";
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFile(file_name, &is_loaded);
+
+        TTK_ASSERT(!is_loaded);
+        TTK_ASSERT(content == "");
+    }
+
+    // load from not existing, no is_loaded check, ascii
+    {
+        const std::string file_name = "log\\test\\TestLoadSave_NotExisting_NoIsLoadedCheck.txt";
+
+        const std::string content = LoadTextFromFile(file_name);
+
+        TTK_ASSERT(content == "");
+    }
+
+    // try save to read only, ascii
+    {
+        const std::string file_name = "log\\test\\TestLoadSave_TrySaveToReadOnly.txt";
+        const std::wstring file_name_utf16 = ToUTF16(file_name);
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(CreateReadOnlyFile(file_name_utf16));
+        TTK_ASSERT(!SaveTextToFile(file_name, expected_content));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFile(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(content == "");
+    }
+ 
+    // utf8
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_\u0107\u0119\u0144.txt";
         const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
 
         TTK_ASSERT(SaveTextToFileUTF8(file_name, expected_content));
@@ -118,11 +206,70 @@ void TestLoadSave() {
         const std::string content = LoadTextFromFileUTF8(file_name, &is_loaded);
 
         TTK_ASSERT(is_loaded);
-        TTK_ASSERT(expected_content == content);
+        TTK_ASSERT(content == expected_content);
     }
 
-}
+    // empty file, utf8
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_EmptyFile_\u0107\u0119\u0144.txt";
 
+        TTK_ASSERT(SaveTextToFileUTF8(file_name, ""));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFileUTF8(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(content == "");
+    }
+
+    // no is_loaded check, utf8
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_NoIsLoadedCheck_\u0107\u0119\u0144.txt";
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(SaveTextToFileUTF8(file_name, expected_content));
+
+        const std::string content = LoadTextFromFileUTF8(file_name);
+
+        TTK_ASSERT(content == expected_content);
+    }
+
+    // load from not existing, utf8
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_NotExisting_\u0107\u0119\u0144.txt";
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFileUTF8(file_name, &is_loaded);
+
+        TTK_ASSERT(!is_loaded);
+        TTK_ASSERT(content == "");
+    }
+
+    // load from not existing, no is_loaded check, utf8
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_NotExisting_NoIsLoadedCheck_\u0107\u0119\u0144.txt";
+
+        const std::string content = LoadTextFromFileUTF8(file_name);
+
+        TTK_ASSERT(content == "");
+    }
+
+    // try save to read only, utf8
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_TrySaveToReadOnly_\u0107\u0119\u0144.txt";
+        const std::wstring file_name_utf16 = ToUTF16(file_name);
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(CreateReadOnlyFile(file_name_utf16));
+        TTK_ASSERT(!SaveTextToFileUTF8(file_name, expected_content));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFileUTF8(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(content == "");
+    }
+}
 
 void TestToStr() {
     // empty string
@@ -144,7 +291,7 @@ void TestToStr() {
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
-
+    
     TTK_ASSERT(ToStr("%s", "abc") == std::string("abc"));
 
     // unicode characters

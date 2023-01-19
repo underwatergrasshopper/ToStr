@@ -196,11 +196,6 @@ std::string ToStr(const char* format, Types&&... arguments) {
 
     const int length = snprintf(stack_buffer, TOSTR_MIN_BUFFER_SIZE, format, arguments...);
 
-    if (errno != 0) {
-        if (errno == EINVAL) ToStr_FatalError("ToStr Error: Wrong argument.");
-        ToStr_FatalError("ToStr Error: Writing to buffer failed.");
-    } 
-
     if (length < 0) {
         ToStr_FatalError("ToStr Error: Encoding error.");
     } 
@@ -211,10 +206,6 @@ std::string ToStr(const char* format, Types&&... arguments) {
 
         const int expected_same_length = snprintf(buffer, size, format, arguments...);
 
-        if (errno != 0) {
-            if (errno == EINVAL) ToStr_FatalError("ToStr Error: Wrong argument at second writing to buffer.");
-            ToStr_FatalError("ToStr Error: Writing to buffer failed at second writing to buffer.");
-        } 
         if (expected_same_length < 0) {
             ToStr_FatalError("ToStr Error: Encoding error at second writing to buffer.");
         } 
