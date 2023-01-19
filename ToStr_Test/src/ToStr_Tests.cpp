@@ -45,12 +45,37 @@ bool CreateReadOnlyFile(const std::wstring& file_name) {
     return true;
 }
 
+void PrintData(const unsigned char* data, size_t size) {
+    for (size_t index = 0; index < size; ++index) {
+        printf("%02X  ", data[index]);
+    }
+    puts("");
+}
+
+void PrintTextData(const char* text) {
+    PrintData((const unsigned char*)text, strlen(text));
+}
+
+void PrintTextData(const wchar_t* text) {
+    PrintData((const unsigned char*)text, wcslen(text) * 2);
+}
+
+template <unsigned N>
+std::string CodeToTextUTF8(const uint8_t (&codes)[N]) {
+    return std::string((const char*)codes);
+}
+
+template <unsigned N>
+std::wstring CodeToTextUTF16(const uint16_t (&codes)[N]) {
+    return std::wstring((const wchar_t*)codes);
+}
+
 //------------------------------------------------------------------------------
 
 void TestToUTF16() {
     // empty text
     TTK_ASSERT(ToUTF16(u8"") == L"");
-
+    
     // unicode characters
     TTK_ASSERT(ToUTF16(u8"Some text\u0444\U0002F820.") == L"Some text\u0444\U0002F820.");
 
@@ -79,6 +104,14 @@ void TestToUTF16() {
 
         TTK_ASSERT(ToUTF16(long_text_utf8) == long_text_utf16);
     }
+
+    // wrong encoding
+    {
+        TTK_ASSERT(ToUTF16(CodeToTextUTF8({'t', 'e', 'x', 't', '\0'})) == CodeToTextUTF16({'t', 'e', 'x', 't', '\0'})); // correct, control one
+        TTK_ASSERT(ToUTF16(CodeToTextUTF8({0xC2, 'e', 'x', 't', '\0'})) == CodeToTextUTF16({0xFFFD, 'e', 'x', 't', '\0'}));
+        TTK_ASSERT(ToUTF16(CodeToTextUTF8({0xFF, 'e', 'x', 't', '\0'})) == CodeToTextUTF16({0xFFFD, 'e', 'x', 't', '\0'}));
+    }
+    
 }
 
 void TestToUTF8() {
@@ -113,6 +146,14 @@ void TestToUTF8() {
 
         TTK_ASSERT(ToUTF8(long_text_utf16) == long_text_utf8);
     }
+
+    // wrong encoding
+    {
+        TTK_ASSERT(ToUTF8(CodeToTextUTF16({'t', 'e', 'x', 't', '\0'})) == CodeToTextUTF8({'t', 'e', 'x', 't', '\0'})); // correct, control one
+        TTK_ASSERT(ToUTF8(CodeToTextUTF16({0xDC00, 'e', 'x', 't', '\0'})) == CodeToTextUTF8({0xEF, 0xBF, 0xBD, 'e', 'x', 't', '\0'}));
+        TTK_ASSERT(ToUTF8(CodeToTextUTF16({0xD800, 'e', 'x', 't', '\0'})) == CodeToTextUTF8({0xEF, 0xBF, 0xBD, 'e', 'x', 't', '\0'}));
+    }
+
 }
 
 void TestLoadSave() {

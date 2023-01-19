@@ -43,14 +43,18 @@
 //------------------------------------------------------------------------------
 
 // Converts utf16 string to utf8 string.
+// Invalid unicode will be replaced with 'EF BF BD' code sequence.
 std::string ToUTF8(const std::wstring& text_utf16);
 
 // Converts utf8 string to utf16 string.
+// Invalid unicode will be replaced with 'FFFD' code.
 std::wstring ToUTF16(const std::string& text_utf8);
 
 //------------------------------------------------------------------------------
 
-// This is the internal buffer size under which no dynamic allocation happens internally in this lib.
+// This is the size for internal buffer placed in stack region of memory. 
+// Functions placed below uses this buffer for internal string operations, until there is need for bigger one. 
+// If there is need for bigger one, then dynamically allocated buffer is created temporary.
 enum { TOSTR_MIN_BUFFER_SIZE = 4096 };
 
 // Converts arguments to text according to the format. Encoding of strings: ASCII, UTF8.
@@ -82,13 +86,13 @@ std::string LoadTextFromFileUTF8(const std::string& file_name, bool* is_loaded =
 
 // file_name            File name with full path to file. Encoding: ASCII.
 // text                 Text to be saved in file. Encoding: ASCII.
-// Returns              true    - if entire file text has been loaded,
+// Returns              true    - if entire text has been loaded from file,
 //                      false   - otherwise.
 bool SaveTextToFile(const std::string& file_name, const std::string& text);
 
 // file_name            File name with full path to file. Encoding: UTF8.
 // text                 Text to be saved in file. Encoding: UTF8.
-// Returns              true    - if entire file text has been loaded,
+// Returns              true    - if entire text has been loaded from file,
 //                      false   - otherwise.
 bool SaveTextToFileUTF8(const std::string& file_name, const std::string& text);
 
@@ -118,9 +122,6 @@ void ToStr_FatalError(const char* message) {
 
 inline std::string ToUTF8(const std::wstring& text_utf16) {
     auto GetErrMsg = [](DWORD error_code) -> const char* {
-        switch (error_code) {
-        case ERROR_NO_UNICODE_TRANSLATION:  return "ToUTF8 Error: Invalid unicode character was found in a string.";
-        }
         return "ToUTF8 Error: Can not convert a text from utf-16 to utf-8.";
     };
 
@@ -151,9 +152,6 @@ inline std::string ToUTF8(const std::wstring& text_utf16) {
 
 inline std::wstring ToUTF16(const std::string& text_utf8) {
     auto GetErrMsg = [](DWORD error_code) -> const char* {
-        switch (error_code) {
-        case ERROR_NO_UNICODE_TRANSLATION:  return "ToUTF16 Error: Invalid unicode character was found in a string.";
-        }
         return "ToUTF16 Error: Can not convert a text from utf-8 to utf-16.";
     };
 
@@ -173,6 +171,7 @@ inline std::wstring ToUTF16(const std::string& text_utf8) {
         if (count == 0) {
             ToStr_FatalError(GetErrMsg(GetLastError()));
         }
+
 
         text_utf16 = std::wstring(buffer);
 
