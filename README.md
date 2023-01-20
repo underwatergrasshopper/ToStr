@@ -6,10 +6,17 @@ C++ library which provides simple ability to:
 
 Targeted platform: Windows.
 
+## HOWTO: Proper clone repository with Git
+Run:
+```
+git clone --recurse-submodules https://github.com/underwatergrasshopper/ToStr.git
+```
+.
+
 ## HOWTO: Run tests manually
-To run all tests for Visual Studio, call `Test.bat`.             
-To run all tests for MinGW\*, call `MinGW_Test.bat`.     
-To run selected tests for MinGW\*, call `MinGW_Test.bat run <build_target> <architecture>` from `ToStr_Test` folder, where
+To run all tests for Visual Studio\*, call `Test.bat`.             
+To run all tests for MinGW\*\*, call `MinGW_Test.bat`.     
+To run selected tests for MinGW\*\*, call `MinGW_Test.bat run <build_target> <architecture>` from `ToStr_Test` folder, where
 ```
 <build_target>
     Release
@@ -19,8 +26,13 @@ To run selected tests for MinGW\*, call `MinGW_Test.bat run <build_target> <arch
     32
 ```
 .
-            
-<sup>\*) To be able compile with 64 bit and 32 bit gcc, add paths to mingw bin folder in `ToStr/ToStr_Test/MinGW_MakeCache.bat`:
+<sup>\*) To be able compile, add path to MSBuild bin folder in `ToStr/TestCache.bat`:
+```
+set MSBUILD_PATH=<path>
+```
+.
+</sup>        
+<sup>\*\*) To be able compile with 64 bit and 32 bit gcc, add paths to mingw bin folder in `ToStr/ToStr_Test/MinGW_MakeCache.bat`:
 ```
 set MINGW32_BIN_PATH=<path>
 set MINGW64_BIN_PATH=<path>
