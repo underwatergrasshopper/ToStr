@@ -98,7 +98,7 @@ bool is_saved = SaveTextToFile("path\\to\\file.txt", "Some text.\nSome other tex
 ```
 ... for utf-8 strings ...
 ```c++
-bool is_saved = SaveTextToFile(u8"path\\to\\file\u0444.txt", (u8"Some text \u0444.\nSome other text.");
+bool is_saved = SaveTextToFile(u8"path\\to\\file\u0444.txt", u8"Some text \u0444.\nSome other text.");
 ```
 
 
