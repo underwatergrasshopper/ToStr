@@ -112,7 +112,7 @@ inline ToStr_Data& ToStr_ToData() {
     return s_data;
 }
 
-void ToStr_FatalError(const char* message) {
+inline void ToStr_FatalError(const char* message) {
     ToStr_Data& data = ToStr_ToData();
     if (data.handle_fatal_error_message) data.handle_fatal_error_message(message);
     exit(EXIT_FAILURE);
