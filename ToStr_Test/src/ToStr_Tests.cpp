@@ -10,6 +10,8 @@
 #include <TrivialTestKit.h>
 
 //------------------------------------------------------------------------------
+// Support
+//------------------------------------------------------------------------------
 
 std::string InnerLoadContentFromFile(const std::string& file_name) {
     std::string content;
@@ -70,6 +72,8 @@ std::wstring CodeToTextUTF16(const uint16_t (&codes)[N]) {
     return std::wstring((const wchar_t*)codes);
 }
 
+//------------------------------------------------------------------------------
+// Tests
 //------------------------------------------------------------------------------
 
 void TestToUTF16() {
@@ -375,6 +379,8 @@ void TestToStrFATAL_ERRROR() {
     system("ToStr_Test.exe CUSTOM_ERR_MSG_HANDLING > log\\test\\custom_err_msg_handling.txt");
     TTK_ASSERT(InnerLoadContentFromFile("log\\test\\custom_err_msg_handling.txt") == "ToStr Error: Argument 'format' can not be 0 or '\\0'.\naddition text\n");
 }
+
+//------------------------------------------------------------------------------
 
 int ToStr_RunTests(int argc, char *argv[]) {
     std::set<std::string> flags;
