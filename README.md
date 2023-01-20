@@ -46,7 +46,7 @@ Compiler: **MSVC** (automated)
 Wide for a stream when first function which operate on the stream is from `wprintf` family. See also documentation of `fwide`.</sup>
 
 ## Examples 
-### Converting variables toa string
+### Converting variables to a string
 
 Converts variables to a string according to the format. Structure of the format is the same as in standard 'printf' function.
 
