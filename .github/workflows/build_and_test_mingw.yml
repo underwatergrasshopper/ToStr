@@ -49,7 +49,9 @@ jobs:
         working-directory: ${{env.GITHUB_WORKSPACE}}
         run: |
           $env:Path = "C:\${{ matrix.mingw_folder }}\bin;" + $env:Path 
-          ./MinGW_MakeTest.bat build ${{ matrix.build_mode }} ${{ matrix.platform }}
+          cd ToStr_Test
+          ./MinGW_Make.bat build ${{ matrix.build_mode }} ${{ matrix.platform }}
+          cd ${{env.GITHUB_WORKSPACE}}
         
       - name: Test
         working-directory: ${{env.GITHUB_WORKSPACE}}
