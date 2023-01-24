@@ -130,19 +130,19 @@ inline std::string ToUTF8(const std::wstring& text_utf16) {
     char stack_buffer[TOSTR_MIN_BUFFER_SIZE] = {};
 
     if (!text_utf16.empty()) {
-        int count = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, NULL, 0, NULL, NULL);
-        if (count == 0) {
+        int size = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, NULL, 0, NULL, NULL);
+        if (size == 0) {
             ToStr_FatalError(GetErrMsg(GetLastError()));
         }
 
-        char* buffer = (count > TOSTR_MIN_BUFFER_SIZE) ? (new char[count]) : stack_buffer;
+        char* buffer = (size > TOSTR_MIN_BUFFER_SIZE) ? (new char[size]) : stack_buffer;
 
-        count = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, buffer, count, NULL, NULL);
-        if (count == 0) {
+        size = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, buffer, size, NULL, NULL);
+        if (size == 0) {
             ToStr_FatalError(GetErrMsg(GetLastError()));
         }
 
-        text_utf8 = std::string(buffer);
+        if (size > 0) text_utf8 = std::string(buffer, size - 1);
 
         if (buffer != stack_buffer) delete[] buffer;
     }
