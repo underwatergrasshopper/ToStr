@@ -112,6 +112,7 @@ void TestToUTF16() {
     // wrong encoding
     {
         TTK_ASSERT(ToUTF16(CodeToTextUTF8({'t', 'e', 'x', 't', '\0'})) == CodeToTextUTF16({'t', 'e', 'x', 't', '\0'})); // correct, control one
+        // U+FFFD - Replacement Character
         TTK_ASSERT(ToUTF16(CodeToTextUTF8({0xC2, 'e', 'x', 't', '\0'})) == CodeToTextUTF16({0xFFFD, 'e', 'x', 't', '\0'}));
         TTK_ASSERT(ToUTF16(CodeToTextUTF8({0xFF, 'e', 'x', 't', '\0'})) == CodeToTextUTF16({0xFFFD, 'e', 'x', 't', '\0'}));
     }
@@ -154,10 +155,10 @@ void TestToUTF8() {
     // wrong encoding
     {
         TTK_ASSERT(ToUTF8(CodeToTextUTF16({'t', 'e', 'x', 't', '\0'})) == CodeToTextUTF8({'t', 'e', 'x', 't', '\0'})); // correct, control one
-        TTK_ASSERT(ToUTF8(CodeToTextUTF16({0xDC00, 'e', 'x', 't', '\0'})) == CodeToTextUTF8({0xEF, 0xBF, 0xBD, 'e', 'x', 't', '\0'}));
+        // U+FFFD - Replacement Character (EF BF BD in utf8)
+        TTK_ASSERT(ToUTF8(CodeToTextUTF16({0xDC00, 'e', 'x', 't', '\0'})) == CodeToTextUTF8({0xEF, 0xBF, 0xBD, 'e', 'x', 't', '\0'})); 
         TTK_ASSERT(ToUTF8(CodeToTextUTF16({0xD800, 'e', 'x', 't', '\0'})) == CodeToTextUTF8({0xEF, 0xBF, 0xBD, 'e', 'x', 't', '\0'}));
     }
-
 }
 
 void TestLoadSave() {
@@ -318,25 +319,11 @@ void TestLoadSave() {
 
 void TestToStr() {
     // empty string
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-security"
-#endif
     TTK_ASSERT(ToStr("") == std::string(""));
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
+    TTK_ASSERT(ToStr("", "") == std::string("")); // second arg should be ignored
 
     // simple text
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-security"
-#endif
     TTK_ASSERT(ToStr("abc") == std::string("abc"));
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-    
     TTK_ASSERT(ToStr("%s", "abc") == std::string("abc"));
 
     // unicode characters
@@ -374,10 +361,13 @@ void TestToStrFATAL_ERRROR() {
     TTK_ASSERT(CreateDirectoryA(".\\log\\test", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
 
     system("ToStr_Test.exe ZERO_FORMAT > log\\test\\zero_format.txt");
-    TTK_ASSERT(InnerLoadContentFromFile("log\\test\\zero_format.txt") == "ToStr Error: Argument 'format' can not be 0 or '\\0'.\n");
+    TTK_ASSERT(InnerLoadContentFromFile("log\\test\\zero_format.txt") == "ToStr Error: Argument 'text' can not be 0 or nullptr.\n");
+
+    system("ToStr_Test.exe ZERO_FORMAT_WITH_ARG > log\\test\\zero_format_with_arg.txt");
+    TTK_ASSERT(InnerLoadContentFromFile("log\\test\\zero_format_with_arg.txt") == "ToStr Error: Argument 'format' can not be 0 or nullptr.\n");
 
     system("ToStr_Test.exe CUSTOM_ERR_MSG_HANDLING > log\\test\\custom_err_msg_handling.txt");
-    TTK_ASSERT(InnerLoadContentFromFile("log\\test\\custom_err_msg_handling.txt") == "ToStr Error: Argument 'format' can not be 0 or '\\0'.\naddition text\n");
+    TTK_ASSERT(InnerLoadContentFromFile("log\\test\\custom_err_msg_handling.txt") == "ToStr Error: Argument 'text' can not be 0 or nullptr.\naddition text\n");
 }
 
 //------------------------------------------------------------------------------
@@ -395,7 +385,11 @@ int ToStr_RunTests(int argc, char *argv[]) {
 
     if (IsFlag("ZERO_FORMAT")) {
         ToStr(0); // this function will exit with error code
+        ToStr(0, ""); // this function will exit with error code
+        return false;
 
+    } else if (IsFlag("ZERO_FORMAT_WITH_ARG")) {
+        ToStr(0, ""); // this function will exit with error code
         return false;
 
     } else if (IsFlag("CUSTOM_ERR_MSG_HANDLING")) {

@@ -25,7 +25,7 @@
 /**
 * @file ToStr.h
 * @author underwatergrasshopper
-* @version 0.1.0
+* @version 0.1.1
 */
 
 #ifndef TOSTR_H_
@@ -142,7 +142,7 @@ inline std::string ToUTF8(const std::wstring& text_utf16) {
             ToStr_FatalError(GetErrMsg(GetLastError()));
         }
 
-        if (size > 0) text_utf8 = std::string(buffer, size - 1);
+        if (size > 1) text_utf8 = std::string(buffer, size - 1);
 
         if (buffer != stack_buffer) delete[] buffer;
     }
@@ -160,20 +160,19 @@ inline std::wstring ToUTF16(const std::string& text_utf8) {
     wchar_t stack_buffer[TOSTR_MIN_BUFFER_SIZE] = {};
 
     if (!text_utf8.empty()) {
-        int count = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, NULL, 0);
-        if (count == 0) {
+        int size = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, NULL, 0);
+        if (size == 0) {
             ToStr_FatalError(GetErrMsg(GetLastError()));
         }
 
-        wchar_t* buffer = (count > TOSTR_MIN_BUFFER_SIZE) ? (new wchar_t[count]) : stack_buffer;
+        wchar_t* buffer = (size > TOSTR_MIN_BUFFER_SIZE) ? (new wchar_t[size]) : stack_buffer;
 
-        count = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, buffer, count);
-        if (count == 0) {
+        size = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, buffer, size);
+        if (size == 0) {
             ToStr_FatalError(GetErrMsg(GetLastError()));
         }
 
-
-        text_utf16 = std::wstring(buffer);
+        if (size > 1) text_utf16 = std::wstring(buffer, size - 1);
 
         if (buffer != stack_buffer) delete[] buffer;
     }
@@ -183,6 +182,18 @@ inline std::wstring ToUTF16(const std::string& text_utf8) {
 
 //------------------------------------------------------------------------------
 
+inline std::string ToStr(const char* text) {
+    if (text == nullptr) {
+        ToStr_FatalError("ToStr Error: Argument 'text' can not be 0 or nullptr.");
+    } 
+    return std::string(text);
+}
+
+
+inline std::string ToStr(const std::string& text) {
+    return text;
+}
+
 template <typename... Types>
 std::string ToStr(const char* format, Types&&... arguments) {
     std::string text;
@@ -190,7 +201,7 @@ std::string ToStr(const char* format, Types&&... arguments) {
     char stack_buffer[TOSTR_MIN_BUFFER_SIZE];
 
     if (format == nullptr) {
-        ToStr_FatalError("ToStr Error: Argument 'format' can not be 0 or '\\0'.");
+        ToStr_FatalError("ToStr Error: Argument 'format' can not be 0 or nullptr.");
     } 
 
     const int length = snprintf(stack_buffer, TOSTR_MIN_BUFFER_SIZE, format, arguments...);
