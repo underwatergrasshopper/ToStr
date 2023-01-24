@@ -103,14 +103,33 @@ bool is_loaded;
 std::string text = LoadTextFromFile(u8"path\\to\\file\u0444.txt", &is_loaded);
 ```
 
+... suppress BOM from file ...
+
+```c++
+std::string text = LoadTextFromFileUTF8_BOM(u8"path\\to\\file\u0444.txt");
+```
+
+```c++
+bool is_loaded;
+std::string text = LoadTextFromFileUTF8_BOM(u8"path\\to\\file\u0444.txt", &is_loaded);
+```
+
 Saves text to file
 
 ```c++
 bool is_saved = SaveTextToFile("path\\to\\file.txt", "Some text.\nSome other text.");
 ```
+
 ... for utf-8 strings ...
+
 ```c++
-bool is_saved = SaveTextToFile(u8"path\\to\\file\u0444.txt", u8"Some text \u0444.\nSome other text.");
+bool is_saved = SaveTextToFileUTF8(u8"path\\to\\file\u0444.txt", u8"Some text \u0444.\nSome other text.");
+```
+
+... adds utf-8 BOM to file ...
+
+```c++
+bool is_saved = SaveTextToFileUTF8_BOM(u8"path\\to\\file\u0444.txt", u8"Some text \u0444.\nSome other text.");
 ```
 
 
