@@ -25,7 +25,7 @@
 /**
 * @file ToStr.h
 * @author underwatergrasshopper
-* @version 0.1.1
+* @version 0.2.0
 */
 
 #ifndef TOSTR_H_
@@ -79,27 +79,47 @@ void ToStr_DefaultHandleFatalErrorMessage(const char* message);
 
 //------------------------------------------------------------------------------
 
+// Loads text from file.
 // file_name            File name with full path to file. Encoding: ASCII.
 // is_loaded            (Optional) If entire file text has been loaded - is set to true, otherwise - is set to false.
-// Returns              Loaded text. Encoding: ASCII.
+// Returns              Loaded text. Encoding: ASCII or UTF8.
 std::string LoadTextFromFile(const std::string& file_name, bool* is_loaded = nullptr);
 
-// file_name            File name with full path to file. Encoding: UTF8.
+
+// Loads text from file.
+// file_name            File name with full path to file. Encoding: ASCII or UTF8.
 // is_loaded            (Optional) If entire file text has been loaded - is set to true, otherwise - is set to false.
-// Returns              Loaded text. Encoding: UTF8.
+// Returns              Loaded text. Encoding: ASCII or UTF8.
 std::string LoadTextFromFileUTF8(const std::string& file_name, bool* is_loaded = nullptr);
 
+// Loads text from file. Expects UTF8 BOM in file. Excludes any BOM from string.
+// file_name            File name with full path to file. Encoding: ASCII or UTF8.
+// is_loaded            (Optional) If entire file text has been loaded - is set to true, otherwise - is set to false.
+// Returns              Loaded text. Encoding: ASCII or UTF8.
+std::string LoadTextFromFileUTF8_BOM(const std::string& file_name, bool* is_loaded = nullptr);
+
+// Saves text to file.
 // file_name            File name with full path to file. Encoding: ASCII.
-// text                 Text to be saved in file. Encoding: ASCII.
+// text                 Text to be saved in file. Encoding: ASCII or UTF8.
 // Returns              true    - if entire text has been loaded from file,
 //                      false   - otherwise.
 bool SaveTextToFile(const std::string& file_name, const std::string& text);
 
-// file_name            File name with full path to file. Encoding: UTF8.
-// text                 Text to be saved in file. Encoding: UTF8.
+
+// Saves text to file in UTF8 format.
+// file_name            File name with full path to file. Encoding: ASCII or UTF8.
+// text                 Text to be saved in file. Encoding: ASCII or UTF8.
 // Returns              true    - if entire text has been loaded from file,
 //                      false   - otherwise.
 bool SaveTextToFileUTF8(const std::string& file_name, const std::string& text);
+
+
+// Saves text to file. Adds UTF8 BOM to file.
+// file_name            File name with full path to file. Encoding: ASCII or UTF8.
+// text                 Text to be saved in file. Encoding: ASCI or UTF8.
+// Returns              true    - if entire text has been loaded from file,
+//                      false   - otherwise.
+bool SaveTextToFileUTF8_BOM(const std::string& file_name, const std::string& text);
 
 //------------------------------------------------------------------------------
 // Inner (only to use internally by this lib)
@@ -291,19 +311,25 @@ inline std::string LoadTextFromFile(const std::string& file_name, bool* is_loade
     return text;
 }
 
-inline bool SaveTextToFile(const std::string& file_name, const std::string& text) {
+inline std::string LoadTextFromFileUTF8(const std::string& file_name, bool* is_loaded) {
+    std::wstring text;
+
     FILE* file = nullptr;
-    if (fopen_s(&file, file_name.c_str(), "wt") == 0 && file) {
-        const int count = fprintf(file, "%s", text.c_str());
+    if (_wfopen_s(&file, ToUTF16(file_name).c_str(), L"rt") == 0 && file) {
+
+        wchar_t c;
+        while ((c = fgetwc(file)) != WEOF) text += c;
         fclose(file);
 
-        return count == text.length();
+        if (is_loaded) *is_loaded = true;
+    } else {
+        if (is_loaded) *is_loaded = false;
     }
 
-    return false;
+    return ToUTF8(text);
 }
 
-inline std::string LoadTextFromFileUTF8(const std::string& file_name, bool* is_loaded) {
+inline std::string LoadTextFromFileUTF8_BOM(const std::string& file_name, bool* is_loaded) {
     std::wstring text;
 
     FILE* file = nullptr;
@@ -321,17 +347,45 @@ inline std::string LoadTextFromFileUTF8(const std::string& file_name, bool* is_l
     return ToUTF8(text);
 }
 
-inline bool SaveTextToFileUTF8(const std::string& file_name, const std::string& text) {
+inline bool SaveTextToFile(const std::string& file_name, const std::string& text) {
     FILE* file = nullptr;
-    if (_wfopen_s(&file, ToUTF16(file_name).c_str(), L"wt, ccs=UTF-8") == 0 && file) {
-        const std::wstring text_utf16 = ToUTF16(text);
-
-        const int count = fwprintf(file, L"%ls", text_utf16.c_str());
+    if (fopen_s(&file, file_name.c_str(), "wt") == 0 && file) {
+        const int count = fprintf(file, "%s", text.c_str());
         fclose(file);
 
-        return count == text_utf16.length();
+        return count == text.length();
     }
-   
+
+    return false;
+}
+
+inline bool SaveTextToFileUTF8(const std::string& file_name, const std::string& text) {
+    FILE* file = nullptr;
+    if (_wfopen_s(&file, ToUTF16(file_name).c_str(), L"wb") == 0 && file) {
+        const size_t count =  fwrite(text.c_str(), sizeof(char), text.length(), file);
+        fclose(file);
+
+        return count == text.length();
+    }
+
+    return false;
+}
+
+inline bool SaveTextToFileUTF8_BOM(const std::string& file_name, const std::string& text) {
+    FILE* file = nullptr;
+    if (_wfopen_s(&file, ToUTF16(file_name).c_str(), L"wb") == 0 && file) {
+
+        constexpr static char BOM[] = { '\xEF', '\xBB', '\xBF' };
+
+        const bool is_wirten = 
+            fwrite(BOM, sizeof(char), sizeof(BOM), file) == 3 &&
+            fwrite(text.c_str(), sizeof(char), text.length(), file) == text.length();
+
+        fclose(file);
+
+        return is_wirten;
+    }
+
     return false;
 }
 
