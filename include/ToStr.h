@@ -81,20 +81,20 @@ void ToStr_DefaultHandleFatalErrorMessage(const char* message);
 
 // Loads text from file.
 // file_name            File name with full path to file. Encoding: ASCII.
-// is_loaded            (Optional) If entire file text has been loaded - is set to true, otherwise - is set to false.
+// is_loaded            (Optional) If entire file text has been loaded - sets to true, otherwise - sets to false.
 // Returns              Loaded text. Encoding: ASCII or UTF8.
 std::string LoadTextFromFile(const std::string& file_name, bool* is_loaded = nullptr);
 
 
-// Loads text from file.
+// Loads text from file. Reads content of file as is in UTF8 encoding.
 // file_name            File name with full path to file. Encoding: ASCII or UTF8.
-// is_loaded            (Optional) If entire file text has been loaded - is set to true, otherwise - is set to false.
+// is_loaded            (Optional) If entire file text has been loaded - sets to true, otherwise - sets to false.
 // Returns              Loaded text. Encoding: ASCII or UTF8.
 std::string LoadTextFromFileUTF8(const std::string& file_name, bool* is_loaded = nullptr);
 
 // Loads text from file. Expects UTF8 BOM in file. Excludes any BOM from string.
 // file_name            File name with full path to file. Encoding: ASCII or UTF8.
-// is_loaded            (Optional) If entire file text has been loaded - is set to true, otherwise - is set to false.
+// is_loaded            (Optional) If entire file text has been loaded - sets to true, otherwise - sets to false.
 // Returns              Loaded text. Encoding: ASCII or UTF8.
 std::string LoadTextFromFileUTF8_BOM(const std::string& file_name, bool* is_loaded = nullptr);
 
@@ -312,21 +312,25 @@ inline std::string LoadTextFromFile(const std::string& file_name, bool* is_loade
 }
 
 inline std::string LoadTextFromFileUTF8(const std::string& file_name, bool* is_loaded) {
-    std::wstring text;
+    std::string text;
 
     FILE* file = nullptr;
-    if (_wfopen_s(&file, ToUTF16(file_name).c_str(), L"rt") == 0 && file) {
+    if (_wfopen_s(&file, ToUTF16(file_name).c_str(), L"rb") == 0 && file) {
+        char c;
+        while (fread(&c, sizeof(char), 1, file) == 1) {
+            if (c != '\r') text += c; // suppress 'carriage return' (CR)
+        }
 
-        wchar_t c;
-        while ((c = fgetwc(file)) != WEOF) text += c;
+        const bool is_all_read = feof(file);
+
         fclose(file);
 
-        if (is_loaded) *is_loaded = true;
+        if (is_loaded) *is_loaded = is_all_read;
     } else {
         if (is_loaded) *is_loaded = false;
     }
 
-    return ToUTF8(text);
+    return text;
 }
 
 inline std::string LoadTextFromFileUTF8_BOM(const std::string& file_name, bool* is_loaded) {

@@ -165,13 +165,15 @@ void TestLoadSave() {
     TTK_ASSERT(CreateDirectoryA(".\\log", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
     TTK_ASSERT(CreateDirectoryA(".\\log\\test", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
 
+
+    // playground
     {
-        SaveTextToFileUTF8_BOM(u8"log\\test\\xxx.txt", u8"Some text \u0444.");
-        PrintTextData(u8"Some text \u0444.");
+        //SaveTextToFileUTF8_BOM(u8"log\\test\\xxx.txt", u8"Some text \u0444.");
+        //PrintTextData(u8"Some text \u0444.");
         //SaveTextToFileUTF8_BOM(L"log\\test\\xxx.txt", L"Some text.");
         //
-        puts(LoadTextFromFile("log\\test\\xxx.txt").c_str());
-        PrintTextData(LoadTextFromFile("log\\test\\xxx.txt").c_str());
+        //puts(LoadTextFromFile("log\\test\\xxx.txt").c_str());
+        //PrintTextData(LoadTextFromFile("log\\test\\xxx.txt").c_str());
         //
         //SaveTextToFileUTF8_BOM(L"log\\test\\xxx.txt", L"Some text.");
         //
@@ -254,16 +256,16 @@ void TestLoadSave() {
         TTK_ASSERT(is_loaded);
         TTK_ASSERT(content == "");
     }
- 
+
     // utf8
     {
         const std::string file_name = u8"log\\test\\TestLoadSave_\u0107\u0119\u0144.txt";
         const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
 
-        TTK_ASSERT(SaveTextToFileUTF8_BOM(file_name, expected_content));
+        TTK_ASSERT(SaveTextToFileUTF8(file_name, expected_content));
 
         bool is_loaded = false;
-        const std::string content = LoadTextFromFileUTF8_BOM(file_name, &is_loaded);
+        const std::string content = LoadTextFromFileUTF8(file_name, &is_loaded);
 
         TTK_ASSERT(is_loaded);
         TTK_ASSERT(content == expected_content);
@@ -273,10 +275,10 @@ void TestLoadSave() {
     {
         const std::string file_name = u8"log\\test\\TestLoadSave_EmptyFile_\u0107\u0119\u0144.txt";
 
-        TTK_ASSERT(SaveTextToFileUTF8_BOM(file_name, ""));
+        TTK_ASSERT(SaveTextToFileUTF8(file_name, ""));
 
         bool is_loaded = false;
-        const std::string content = LoadTextFromFileUTF8_BOM(file_name, &is_loaded);
+        const std::string content = LoadTextFromFileUTF8(file_name, &is_loaded);
 
         TTK_ASSERT(is_loaded);
         TTK_ASSERT(content == "");
@@ -287,9 +289,9 @@ void TestLoadSave() {
         const std::string file_name = u8"log\\test\\TestLoadSave_NoIsLoadedCheck_\u0107\u0119\u0144.txt";
         const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
 
-        TTK_ASSERT(SaveTextToFileUTF8_BOM(file_name, expected_content));
+        TTK_ASSERT(SaveTextToFileUTF8(file_name, expected_content));
 
-        const std::string content = LoadTextFromFileUTF8_BOM(file_name);
+        const std::string content = LoadTextFromFileUTF8(file_name);
 
         TTK_ASSERT(content == expected_content);
     }
@@ -299,7 +301,7 @@ void TestLoadSave() {
         const std::string file_name = u8"log\\test\\TestLoadSave_NotExisting_\u0107\u0119\u0144.txt";
 
         bool is_loaded = false;
-        const std::string content = LoadTextFromFileUTF8_BOM(file_name, &is_loaded);
+        const std::string content = LoadTextFromFileUTF8(file_name, &is_loaded);
 
         TTK_ASSERT(!is_loaded);
         TTK_ASSERT(content == "");
@@ -309,7 +311,7 @@ void TestLoadSave() {
     {
         const std::string file_name = u8"log\\test\\TestLoadSave_NotExisting_NoIsLoadedCheck_\u0107\u0119\u0144.txt";
 
-        const std::string content = LoadTextFromFileUTF8_BOM(file_name);
+        const std::string content = LoadTextFromFileUTF8(file_name);
 
         TTK_ASSERT(content == "");
     }
@@ -317,6 +319,109 @@ void TestLoadSave() {
     // try save to read only, utf8
     {
         const std::string file_name = u8"log\\test\\TestLoadSave_TrySaveToReadOnly_\u0107\u0119\u0144.txt";
+        const std::wstring file_name_utf16 = ToUTF16(file_name);
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(CreateReadOnlyFile(file_name_utf16));
+        TTK_ASSERT(!SaveTextToFileUTF8(file_name, expected_content));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFileUTF8(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(content == "");
+    }
+
+    // utf8 BOM save check
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_BOM_check.txt";
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(SaveTextToFileUTF8_BOM(file_name, expected_content));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFile(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(content == "\xEF\xBB\xBF" + expected_content);
+    }
+
+    // utf8 no BOM load check
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_No_BOM_check.txt";
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(SaveTextToFile(file_name, expected_content));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFileUTF8_BOM(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(content == expected_content);
+    }
+ 
+    // utf8 BOM
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_\u0107\u0119\u0144_BOM.txt";
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(SaveTextToFileUTF8_BOM(file_name, expected_content));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFileUTF8_BOM(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(content == expected_content);
+    }
+
+    // empty file, utf8 BOM
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_EmptyFile_\u0107\u0119\u0144_BOM.txt";
+
+        TTK_ASSERT(SaveTextToFileUTF8_BOM(file_name, ""));
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFileUTF8_BOM(file_name, &is_loaded);
+
+        TTK_ASSERT(is_loaded);
+        TTK_ASSERT(content == "");
+    }
+
+    // no is_loaded check, utf8 BOM
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_NoIsLoadedCheck_\u0107\u0119\u0144_BOM.txt";
+        const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
+
+        TTK_ASSERT(SaveTextToFileUTF8_BOM(file_name, expected_content));
+
+        const std::string content = LoadTextFromFileUTF8_BOM(file_name);
+
+        TTK_ASSERT(content == expected_content);
+    }
+
+    // load from not existing, utf8 BOM
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_NotExisting_\u0107\u0119\u0144_BOM.txt";
+
+        bool is_loaded = false;
+        const std::string content = LoadTextFromFileUTF8_BOM(file_name, &is_loaded);
+
+        TTK_ASSERT(!is_loaded);
+        TTK_ASSERT(content == "");
+    }
+
+    // load from not existing, no is_loaded check, utf8 BOM
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_NotExisting_NoIsLoadedCheck_\u0107\u0119\u0144_BOM.txt";
+
+        const std::string content = LoadTextFromFileUTF8_BOM(file_name);
+
+        TTK_ASSERT(content == "");
+    }
+
+    // try save to read only, utf8 BOM
+    {
+        const std::string file_name = u8"log\\test\\TestLoadSave_TrySaveToReadOnly_\u0107\u0119\u0144_BOM.txt";
         const std::wstring file_name_utf16 = ToUTF16(file_name);
         const std::string expected_content = u8"Some text\n\uD558\u0444\U00020001\n.";
 
