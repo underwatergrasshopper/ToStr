@@ -46,13 +46,13 @@ Compiler: **MSVC** (automated)
 
 | Test Platform | Target Platform | Environment | Architecture | Stream Orientation \* | Build and Test |
 |-|-|-|-|-|-|
-| Windows Server 2022, Windows Server 2019 | Windows 10 |  Visual Studio 2022, Visual Studio  2019 | x86, x86_64 | Narrow and Wide | [![Build and Test](https://github.com/underwatergrasshopper/TrivialTestKit/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/underwatergrasshopper/ToStr/actions/workflows/build_and_test.yml) |
+| Windows Server 2022, Windows Server 2019 | Windows 10 |  Visual Studio 2022, Visual Studio  2019 | x86, x86_64 | Narrow and Wide | [![Build and Test](https://github.com/underwatergrasshopper/ToStr/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/underwatergrasshopper/ToStr/actions/workflows/build_and_test.yml) |
 
  Compiler: **LLVM CLang MinGW** (automated)
 
 | Test Platform | Target Platform | Environment | Architecture | Stream Orientation \* | Build and Test |
 |-|-|-|-|-|-|
-| Windows Server 2022 | Windows 10 | MinGW-W64 (LLVM Clang 15.0.0) | x86, x86_64 | Narrow and Wide |  [![Build and Test (MinGW)](https://github.com/underwatergrasshopper/TrivialTestKit/actions/workflows/build_and_test_mingw.yml/badge.svg)](https://github.com/underwatergrasshopper/ToStr/actions/workflows/build_and_test_mingw.yml) |
+| Windows Server 2022 | Windows 10 | MinGW-W64 (LLVM Clang 15.0.0) | x86, x86_64 | Narrow and Wide |  [![Build and Test (MinGW)](https://github.com/underwatergrasshopper/ToStr/actions/workflows/build_and_test_mingw.yml/badge.svg)](https://github.com/underwatergrasshopper/ToStr/actions/workflows/build_and_test_mingw.yml) |
 
 <sup>\* Narrow for a stream when first function which operate on the stream is from `printf` family.
 Wide for a stream when first function which operate on the stream is from `wprintf` family. See also documentation of `fwide`.</sup>
